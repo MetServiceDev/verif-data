@@ -1,4 +1,9 @@
-from . import resource_ddb, TABLE_NAME
+"""
+Functions for querying the DynamoDB table for observations.
+
+"""
+
+from . import resource_ddb, TABLE_NAME, TABLE_NAME_recent
 from .. import get_loggers
 from boto3.dynamodb.conditions import Key
 import datetime
@@ -8,13 +13,14 @@ import xarray as xr
 
 logger = get_loggers()
 
-def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datetime):
+def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datetime, table_recent: bool = False):
     """Get all observations from the DynamoDB table for a given obs_id and time range.
 
     Args:
         obs_id (str): The obs_id to query.
         dt_start (datetime.datetime): The start datetime.
         dt_end (datetime.datetime): The end datetime.
+        table_recent (bool, optional): If True, also query the recent table. Defaults to False.
 
     Returns:
         list: A list of dictionaries containing the observations.
@@ -28,18 +34,23 @@ def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datet
         logger.warning("Start and end datetime must be in the same year...")
         result = []
     else:
+        if table_recent:
+            ddb_tables = [
+                TABLE_NAME.format(year=dt_start.year),
+                TABLE_NAME_recent,
+            ]
+        else:
+            ddb_tables = [TABLE_NAME.format(year=dt_start.year)]
+
         result = []
-        for ddb_table_name in [
-            TABLE_NAME.format(year=dt_start.year),
-            # TABLE_NAME_recent,
-        ]:
+        for ddb_table_name in ddb_tables:
             # query the table for the obs_id and time range of interest
             ddb_table = resource_ddb.Table(ddb_table_name)
             response = ddb_table.query(
                 KeyConditionExpression=Key("obs_id").eq(obs_id)
                 & Key("valid_time").between(dt_0, dt_1)
             )
-            result = response["Items"]
+            result.extend(response["Items"])
 
             # if there are more than 1MB of data, then we need to query again
             while "LastEvaluatedKey" in response:
