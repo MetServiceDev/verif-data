@@ -29,37 +29,30 @@ def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datet
     dt_0 = datetime.datetime.strftime(dt_start, "%Y%m%d%H%M%S")
     dt_1 = datetime.datetime.strftime(dt_end, "%Y%m%d%H%M%S")
 
-    # query the DynamoDB table
-    if dt_start.year != dt_end.year:
-        logger.warning("Start and end datetime must be in the same year...")
-        result = []
-    else:
-        if table_recent:
-            ddb_tables = [
-                TABLE_NAME.format(year=dt_start.year),
-                TABLE_NAME_recent,
-            ]
-        else:
-            ddb_tables = [TABLE_NAME.format(year=dt_start.year)]
+    ddb_tables = [TABLE_NAME.format(year=year) for year in range(dt_start.year, dt_end.year + 1)]
+    if table_recent:
+        ddb_tables = ddb_tables + [TABLE_NAME_recent] 
 
-        result = []
-        for ddb_table_name in ddb_tables:
-            # query the table for the obs_id and time range of interest
-            ddb_table = resource_ddb.Table(ddb_table_name)
+    # query the DynamoDB tables
+
+    result = []
+    for ddb_table_name in ddb_tables:
+        # query the table for the obs_id and time range of interest
+        ddb_table = resource_ddb.Table(ddb_table_name)
+        response = ddb_table.query(
+            KeyConditionExpression=Key("obs_id").eq(obs_id)
+            & Key("valid_time").between(dt_0, dt_1)
+        )
+        result.extend(response["Items"])
+
+        # if there are more than 1MB of data, then we need to query again
+        while "LastEvaluatedKey" in response:
             response = ddb_table.query(
                 KeyConditionExpression=Key("obs_id").eq(obs_id)
-                & Key("valid_time").between(dt_0, dt_1)
+                & Key("valid_time").between(dt_0, dt_1),
+                ExclusiveStartKey=response["LastEvaluatedKey"],
             )
             result.extend(response["Items"])
-
-            # if there are more than 1MB of data, then we need to query again
-            while "LastEvaluatedKey" in response:
-                response = ddb_table.query(
-                    KeyConditionExpression=Key("obs_id").eq(obs_id)
-                    & Key("valid_time").between(dt_0, dt_1),
-                    ExclusiveStartKey=response["LastEvaluatedKey"],
-                )
-                result.extend(response["Items"])
 
     return result
 
