@@ -29,9 +29,9 @@ def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datet
     dt_0 = datetime.datetime.strftime(dt_start, "%Y%m%d%H%M%S")
     dt_1 = datetime.datetime.strftime(dt_end, "%Y%m%d%H%M%S")
 
-    tables = [TABLE_NAME.format(year=year) for year in range(dt_start.year, dt_end.year + 1)]
+    ddb_tables = [TABLE_NAME.format(year=year) for year in range(dt_start.year, dt_end.year + 1)]
     if table_recent:
-        tables = tables + [TABLE_NAME_recent] 
+        ddb_tables = ddb_tables + [TABLE_NAME_recent] 
 
     # query the DynamoDB tables
 
