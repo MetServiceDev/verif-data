@@ -19,7 +19,8 @@ def main():
                           "matplotlib",
                           "h5netcdf",
                           "dask",
-                          "dt-output"]
+                          "dt-output",
+                          "properscoring"]
     )
 
 if __name__ == "__main__":
