@@ -3,6 +3,7 @@ Functions for verifying DeepThought ePD/DLITE outputs
 
 """
 import numpy as np
+from scipy.stats import norm
 import pandas as pd
 import xarray as xr
 import properscoring as ps
@@ -31,7 +32,7 @@ def verify_dt_ouput(station, dt_start, dt_end, predictand, dt_kind):
 
     # get deepthought forecast from the archive
     try:
-        dt_ds = get_dt_output(station, dt_start, dt_end, predictand, source='S3', dt_kind=dt_kind, output="all")
+        dt_ds = get_dt_output(station, dt_start, dt_end, predictand, source='S3', dt_kind=dt_kind, output=None)
     except:
         print(f"No ePD data for station {station}")
         return
@@ -53,37 +54,72 @@ def verify_dt_ouput(station, dt_start, dt_end, predictand, dt_kind):
     dt_ds[f'obs_{predictand}'] = (('basetime', 'prognosis_period'), obs_predictand)
 
 
-    # observation probabiltiy
-    p_obs = xr.apply_ufunc(np.interp,
-                       dt_ds[f'obs_{predictand}'],
-                       dt_ds['pdf'].isel(pdf_parameter=0),
-                       dt_ds['pdf'].isel(pdf_parameter=1),
-                       exclude_dims=set(('pdf_index',)),
-                       input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
-                       vectorize=True)
-    dt_ds['p_obs'] = p_obs.astype(np.float32)
+    if dt_kind=='ePD':
+        # observation probabiltiy
+        p_obs = xr.apply_ufunc(np.interp,
+                        dt_ds[f'obs_{predictand}'],
+                        dt_ds['pdf'].isel(pdf_parameter=0),
+                        dt_ds['pdf'].isel(pdf_parameter=1),
+                        exclude_dims=set(('pdf_index',)),
+                        input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
+                        vectorize=True)
+        dt_ds['p_obs'] = p_obs.astype(np.float32)
 
-    # negative log likelihood
-    dt_ds['negloglik'] = -np.log(dt_ds['p_obs'])
+        # negative log likelihood
+        dt_ds['negloglik'] = -np.log(dt_ds['p_obs'])
 
-    # cumulative proba (for PIT histogram)
-    cp_obs = xr.apply_ufunc(np.interp,
-                       dt_ds[f'obs_{predictand}'],
-                       dt_ds['cdf'].isel(pdf_parameter=0),
-                       dt_ds['cdf'].isel(pdf_parameter=1),
-                       exclude_dims=set(('pdf_index',)),
-                       input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
-                       vectorize=True)
-    dt_ds['cp_obs'] = cp_obs.astype(np.float32)
+        # cumulative proba (for PIT histogram)
+        cp_obs = xr.apply_ufunc(np.interp,
+                        dt_ds[f'obs_{predictand}'],
+                        dt_ds['cdf'].isel(pdf_parameter=0),
+                        dt_ds['cdf'].isel(pdf_parameter=1),
+                        exclude_dims=set(('pdf_index',)),
+                        input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
+                        vectorize=True)
+        dt_ds['cp_obs'] = cp_obs.astype(np.float32)
 
-    # crps
-    crps = xr.apply_ufunc(ps.crps_ensemble,
-                       dt_ds[f'obs_{predictand}'],
-                       dt_ds['pdf'].isel(pdf_parameter=0),
-                       dt_ds['pdf'].isel(pdf_parameter=1),
-                       exclude_dims=set(('pdf_index',)),
-                       input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
-                       vectorize=True)
-    dt_ds['crps'] = crps.astype(np.float32)
+        # crps
+        crps = xr.apply_ufunc(ps.crps_ensemble,
+                        dt_ds[f'obs_{predictand}'],
+                        dt_ds['pdf'].isel(pdf_parameter=0),
+                        dt_ds['pdf'].isel(pdf_parameter=1),
+                        exclude_dims=set(('pdf_index',)),
+                        input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
+                        vectorize=True)
+        dt_ds['crps'] = crps.astype(np.float32)
+
+    elif dt_kind=='DLITE':
+        # observation probabiltiy (for the normal dist)
+        p_obs = xr.apply_ufunc(norm.pdf,
+                        dt_ds[f'obs_{predictand}'],
+                        dt_ds[f'{predictand}_PDF_parameter'].isel(pdf_parameter=0),
+                        dt_ds[f'{predictand}_PDF_parameter'].isel(pdf_parameter=1),
+                        exclude_dims=set(('pdf_index',)),
+                        input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
+                        vectorize=True)
+        dt_ds['p_obs'] = p_obs.astype(np.float32)
+
+        # negative log likelihood
+        dt_ds['negloglik'] = -np.log(dt_ds['p_obs'])
+
+        # cumulative proba (for PIT histogram)
+        cp_obs = xr.apply_ufunc(norm.cdf,
+                        dt_ds[f'obs_{predictand}'],
+                        dt_ds[f'{predictand}_PDF_parameter'].isel(pdf_parameter=0),
+                        dt_ds[f'{predictand}_PDF_parameter'].isel(pdf_parameter=1),
+                        exclude_dims=set(('pdf_index',)),
+                        input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
+                        vectorize=True)
+        dt_ds['cp_obs'] = cp_obs.astype(np.float32)
+
+        # crps
+        crps = xr.apply_ufunc(ps.crps_gaussian,
+                        dt_ds[f'obs_{predictand}'],
+                        dt_ds[f'{predictand}_PDF_parameter'].isel(pdf_parameter=0),
+                        dt_ds[f'{predictand}_PDF_parameter'].isel(pdf_parameter=1),
+                        exclude_dims=set(('pdf_index',)),
+                        input_core_dims=[[], ["pdf_index"], ["pdf_index"]],
+                        vectorize=True)
+        dt_ds['crps'] = crps.astype(np.float32)
 
     return dt_ds[['validtime', f'obs_{predictand}', 'mean', 'var', 'std', 'p_obs', 'cp_obs', 'negloglik', 'crps']]
