@@ -33,7 +33,7 @@ def main():
     dt_end = datetime.datetime(2022,12, 31)
 
     predictand='TTTTT'
-    dt_kind='ePD'
+    dt_kind='DLITE'
 
     for station in tqdm(station_list):
         ds_verif = verify_dt_ouput(station, dt_start, dt_end, predictand, dt_kind)
@@ -41,7 +41,7 @@ def main():
             ds_verif.to_netcdf('./temp.nc')
             s3.upload_file('./temp.nc',
                         'metservice-research-us-west-2'
-                        , f'research/experiments/benv/mlpp/verification/2022/ePD/TTTTT/{station}.nc')
+                        , f'research/experiments/benv/mlpp/verification/2022/DLITE/TTTTT/{station}.nc')
             
 
 if __name__ == "__main__":
