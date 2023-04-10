@@ -14,6 +14,7 @@ def main():
                           "boto3",
                           "numpy",
                           "pandas",
+                          "pyarrow",
                           "scipy",
                           "xarray",
                           "matplotlib",
