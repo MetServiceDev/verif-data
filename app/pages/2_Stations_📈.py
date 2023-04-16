@@ -16,8 +16,11 @@ st.set_page_config(
     }
 )
 
-st.cache_data.clear()
-st.cache_resource.clear()
+
+data_path = st.session_state["data_path"]
+year = st.session_state["year"]
+predictand = st.session_state["predictand"]
+ref_model = st.session_state["ref_model"]
 
 
 # Ref Model station list
@@ -40,9 +43,7 @@ def load_station(model, station, basetimes_hours=None, prog_periods=None):
     if prog_periods is not None:
         _ds = _ds.isel(prognosis_period=slice(0, prog_periods))
 
-    # _ds['mae'] = np.abs(_ds['mean'] - _ds[f'obs_{predictand}'])
-    # ds_lead = _ds.groupby('prognosis_period').mean(dim='basetime').to_dataframe()
-    return _ds #, ds_lead
+    return _ds
 
 # @st.cache_data
 # def station_lead(_ds):
