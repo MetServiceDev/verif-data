@@ -58,14 +58,12 @@ st.session_state["model_leadtimes"] = load_mean_leadtime(st.session_state["model
 st.session_state["epd_leadtimes"] = load_mean_leadtime(st.session_state["epd_path"])
 
 
-# Stations c_obs by station
+# Stations prob bins
 # @st.cache_data
-# def load_c_ops(model_path):
-#     _ds = pd.concat([pd.read_parquet(file).reset_index()
-#                        .assign(lead_hour = lambda x: x['prognosis_period'] / np.timedelta64(1, 'h'))
-#         for file in glob.glob(f'{model_path}/*_cp_obs.parquet')])
-#     _ds = _ds[_ds['lead_hour'] <= st.session_state["max_lead"]]
-#     return _ds
+def load_prob_bins_leadtime(model_path):
+    _ds = pd.concat([pd.read_parquet(file)
+            for file in glob.glob(f'{model_path}/*_prob_bins.parquet')])
+    return _ds
 
-# st.session_state["model_c_obs"] = load_c_ops(st.session_state["model_path"])
-# st.session_state["epd_c_obs"] = load_c_ops(st.session_state["epd_path"])
+st.session_state["prob_bins"] = pd.concat([load_prob_bins_leadtime(st.session_state["model_path"]).assign(model = st.session_state["ref_model"] ),
+                                           load_prob_bins_leadtime(st.session_state["epd_path"]).assign(model = 'ePD') ])

@@ -1,7 +1,9 @@
 numpy
 pandas
+scipy
 pyarrow
 matplotlib
+seaborn
 plotly
 xarray
 netcdf4

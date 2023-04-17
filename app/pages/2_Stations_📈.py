@@ -6,15 +6,6 @@ import plotly.graph_objs as go
 import pandas as pd
 import numpy as np
 
-st.set_page_config(
-    page_title="Verification App",
-    page_icon="random",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'About': "FR&D Verification App"
-    }
-)
 
 
 data_path = st.session_state["data_path"]
@@ -27,6 +18,7 @@ ref_model = st.session_state["ref_model"]
 station_list = [station.split('/')[-1:][0][:5] for station 
                 in glob.glob(f'{data_path}/{year}/{ref_model}/{predictand}/*')] #.sort()
 
+station_attributes = st.session_state["stations_attributes"][st.session_state["stations_attributes"]['stationId'].isin(station_list)]
 
 @st.cache_resource
 def load_station(model, station, basetimes_hours=None, prog_periods=None):
@@ -45,23 +37,22 @@ def load_station(model, station, basetimes_hours=None, prog_periods=None):
 
     return _ds
 
-# @st.cache_data
-# def station_lead(_ds):
-#     """
-#     """
-#     _ds['mae'] = np.abs(_ds['mean'] - _ds[f'obs_{predictand}'])
-#     ds_lead = _ds.groupby('prognosis_period').mean(dim='basetime').to_dataframe()
-#     return ds_lead
+
+# Title
+st.header('Probabilistic Verification - Station Level Metrics')
 
 
 # Selection widgets ##############################################
-station_select = st.sidebar.selectbox("Select a station", station_list)
+station_select = st.sidebar.selectbox("Select a station", station_attributes['stationId'])
+
+st.write('Station :', station_attributes[station_attributes['stationId']==station_select])
 
 basetime_values = load_station(ref_model, station_select)['basetime'].values
 
 basetime_select = st.sidebar.select_slider("Basetime",
                                            basetime_values
                                         )
+
 
 # Data Load #######################################################
 # load station set for DRN
@@ -80,11 +71,9 @@ drn_station_pit = drn_station['cp_obs'].values.flatten()
 epd_station_pit = ePD_station['cp_obs'].values.flatten()
 
 # grouped by lead time values
-# drn_station['mae'] = np.abs(drn_station['mean'] - drn_station[f'obs_{predictand}'])
-# drn_station_lead = drn_station.groupby('prognosis_period').mean(dim='basetime').to_dataframe()
+station_model_leadtime = st.session_state["model_leadtimes"].loc[st.session_state["model_leadtimes"]['stationId']==station_select]
+station_epd_leadtime = st.session_state["epd_leadtimes"].loc[st.session_state["epd_leadtimes"]['stationId']==station_select]
 
-# ePD_station['mae'] = np.abs(ePD_station['mean'] - ePD_station[f'obs_{predictand}'])
-# ePD_station_lead = ePD_station.groupby('prognosis_period').mean(dim='basetime').to_dataframe()
 
 # Time Serie Plot ##########################################
 trace11 = go.Scatter(x=drn_station_basetime['validtime'],
@@ -104,25 +93,80 @@ trace13 = go.Scatter(x=drn_station_basetime['validtime'],
                     mode='lines',
                     name='Obs' )
 
-
-# create plot layout
 layout = go.Layout(
     title='Time Serie - DRN vs. ePD - Mean +/- SD ',
     xaxis=dict(title='Valid Time'),
     yaxis=dict(title=predictand)
 )
 
-# create plot figure with multiple line plot traces
 fig1 = go.Figure(data=[trace11, trace12, trace13], layout=layout)
 fig1.update_xaxes(range=[drn_station_basetime['validtime'].min(), drn_station_basetime['validtime'].max()])
 st.plotly_chart(fig1,use_container_width=True)
+
+
+
+col1, col2 = st.columns(2)
+
+with col1:
+    # CRPS Plot ##########################################
+    trace31 = go.Scatter(x=station_model_leadtime['lead_hour'],
+                        y=station_model_leadtime['crps'],
+                        mode='lines',
+                        name=ref_model )
+
+    trace32 = go.Scatter(x=station_epd_leadtime['lead_hour'],
+                        y=station_epd_leadtime['crps'],
+                        mode='lines',
+                        name='ePD' )
+
+    layout = go.Layout(
+            title='Mean Continous Ranked Probability Score',
+            xaxis=dict(title='Lead Time Hour'),
+            yaxis=dict(title='Deg C')
+    )
+
+    fig3 = go.Figure(data=[trace31, trace32], layout=layout)
+    fig3.update_xaxes(range=[station_model_leadtime['lead_hour'].min(), station_model_leadtime['lead_hour'].max()])
+    st.plotly_chart(fig3,use_container_width=False)
+
+with col2:
+    # MAE Plot ##########################################
+    trace1 = go.Scatter(x=station_model_leadtime['lead_hour'],
+                        y=station_model_leadtime['mae'],
+                        mode='lines',
+                        name=f'{st.session_state["ref_model"]} - mean' )
+
+
+    trace2 = go.Scatter(x=station_epd_leadtime['lead_hour'],
+                        y=station_epd_leadtime['mae'],
+                        mode='lines',
+                        name='ePD - Mean' )
+
+    trace3 = go.Scatter(x=station_model_leadtime['lead_hour'],
+                        y=station_model_leadtime['nwp_mae'],
+                        mode='lines',
+                        name='NWP' )
+
+    layout = go.Layout(
+        title='MAE',
+        xaxis=dict(title='Lead Time Hour'),
+        yaxis=dict(title='Deg C')
+    )
+
+    # create plot figure with multiple line plot traces
+    fig2 = go.Figure(data=[trace1, trace2, trace3], layout=layout)
+    fig2.update_xaxes(range=[0 ,st.session_state["max_lead"]])
+    st.plotly_chart(fig2,use_container_width=False)
+
+
+
 
 
 # PIT histogram ###########################
 trace21 = go.Histogram(x=drn_station_pit,
                       xbins=dict(start=0, end=1, size=0.1),
                       histnorm='percent',
-                      name='DRN' )
+                      name=ref_model )
 
 trace22 = go.Histogram(x=epd_station_pit,
                       xbins=dict(start=0, end=1, size=0.1),
@@ -138,46 +182,16 @@ hline = go.layout.Shape(
     line=dict(color='red', width=2)
 )
 
-# create plot layout
 layout = go.Layout(
     title='PIT Histogram - DRN vs. ePD',
-    xaxis=dict(title='PIT'),
+    xaxis=dict(title='Forecast Probability Quantile'),
     yaxis=dict(title='% of Observed'),
     shapes=[hline]
 )
 
-# create plot figure with multiple line plot traces
 fig2 = go.Figure(data=[trace21, trace22], layout=layout)
 st.plotly_chart(fig2,use_container_width=False)
 
 
 
 
-# CRPS Plot ##########################################
-trace31 = go.Scatter(x=drn_station_lead.index,
-                    y=drn_station_lead['crps'],
-                    mode='lines',
-                    name='DRN' )
-
-trace32 = go.Scatter(x=ePD_station_lead.index,
-                    y=ePD_station_lead['crps'],
-                    mode='lines',
-                    name='ePD' )
-
-# trace13 = go.Scatter(x=drn_station_basetime['validtime'],
-#                     y=drn_station_basetime['obs_TTTTT'],
-#                     mode='lines',
-#                     name='Obs' )
-
-
-# create plot layout
-layout = go.Layout(
-    title='Time Serie - DRN vs. ePD - Mean +/- SD ',
-    xaxis=dict(title='Valid Time'),
-    yaxis=dict(title=predictand)
-)
-
-# create plot figure with multiple line plot traces
-fig3 = go.Figure(data=[trace31, trace32], layout=layout)
-#fig3.update_xaxes(range=[drn_station_basetime['validtime'].min(), drn_station_basetime['validtime'].max()])
-st.plotly_chart(fig3,use_container_width=False)
