@@ -20,6 +20,7 @@ def main():
                           "matplotlib",
                           "h5netcdf",
                           "dask",
+                          "flox",
                           "dt-output",
                           "properscoring"]
     )
