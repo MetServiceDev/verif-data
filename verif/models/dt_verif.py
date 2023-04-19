@@ -64,7 +64,8 @@ def verify_dt_ouput(station, dt_start, dt_end, predictand, dt_kind):
     obs_predictand = map_func(pd.to_datetime(dt_ds['validtime'].values)).astype(np.float32)
     # assign with the same dimensions
     dt_ds[f'obs_{predictand}'] = (('basetime', 'prognosis_period'), obs_predictand)
-
+    # add metadata
+    dt_ds[f'obs_{predictand}'].attrs = obs_ds.attrs
 
     # if dt_kind=='ePD':
     # full prob distribution

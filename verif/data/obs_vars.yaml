@@ -13,8 +13,8 @@ ePD:
     unit: kt
     DDB_obs:
       windSpeed@1h:
-        unit: kt
-        conv: [1,0]
+        unit: m/s
+        conv: [1.944,0]
     API_obs:
       windspd_01hravg:
         unit: kt
@@ -34,8 +34,8 @@ DLITE:
     unit: kt
     DDB_obs:
       windSpeed@1h:
-        unit: kt
-        conv: [1,0]
+        unit: m/s
+        conv: [1.944,0]
     API_obs:
       windspd_01hravg:
         unit: kt
