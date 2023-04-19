@@ -73,7 +73,7 @@ def get_obs_serie(wmo_code: str,
                            + obs_vars[model][output_var][obs_source][obs_var]['conv'][1]
                            )
         # add metedata
-        obs_var_serie.attrs['observation source'] = obs_source
+        obs_var_serie.attrs['observation source'] = f'{obs_source} - converted units'
         obs_var_serie.attrs['unit'] = obs_vars[model][output_var]['unit']
 
     #elif obs_source='API_obs':
