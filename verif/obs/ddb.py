@@ -24,7 +24,7 @@ def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datet
 
     Returns:
         list: A list of dictionaries containing the observations.
-    """    
+    """
     # convert datetime to string
     dt_0 = datetime.datetime.strftime(dt_start, "%Y%m%d%H%M%S")
     dt_1 = datetime.datetime.strftime(dt_end, "%Y%m%d%H%M%S")

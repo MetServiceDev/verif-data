@@ -2,6 +2,7 @@
 Functions for verifying DeepThought ePD/DLITE outputs
 
 """
+import datetime
 import numpy as np
 from scipy.stats import norm
 import pandas as pd
@@ -52,7 +53,7 @@ def verify_dt_ouput(station, dt_start, dt_end, predictand, dt_kind):
                             predictand,
                             'DDB_obs',
                             dt_start,
-                            dt_end,
+                            dt_end + datetime.timedelta(days=16), # add 16 days to cover the prognosis period
                             freq='hourly')
     
     # observation mapping
