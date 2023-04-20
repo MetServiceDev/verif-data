@@ -19,7 +19,7 @@ def load_obs_vars():
 
 
 def load_iceobs_stations():
-    ''' Loads the iceobs ataion list for obs_id/wmo conversion
+    ''' Loads the iceobs station list for obs_id/wmo conversion
     '''
     file = pkg_resources.resource_filename('verif', 'data/iceobs_stations.json')
     with open(file, 'r') as f:

@@ -1,10 +1,10 @@
 """
 Functions for querying the DynamoDB table for observations.
-
 """
 
 from . import resource_ddb, TABLE_NAME, TABLE_NAME_recent
 from .. import get_loggers
+import boto3
 from boto3.dynamodb.conditions import Key
 import datetime
 import numpy as np
@@ -15,16 +15,14 @@ logger = get_loggers()
 
 def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datetime, table_recent: bool = False):
     """Get all observations from the DynamoDB table for a given obs_id and time range.
-
     Args:
         obs_id (str): The obs_id to query.
         dt_start (datetime.datetime): The start datetime.
         dt_end (datetime.datetime): The end datetime.
         table_recent (bool, optional): If True, also query the recent table. Defaults to False.
-
     Returns:
         list: A list of dictionaries containing the observations.
-    """
+    """    
     # convert datetime to string
     dt_0 = datetime.datetime.strftime(dt_start, "%Y%m%d%H%M%S")
     dt_1 = datetime.datetime.strftime(dt_end, "%Y%m%d%H%M%S")
@@ -59,12 +57,10 @@ def get_obs_all(obs_id: str, dt_start: datetime.datetime, dt_end: datetime.datet
 
 def extract_obs_data(obs_all: list, var_name: str, freq: str):
     """Extract the data from the observations.
-
     Args:
         obs_all (list): all observations queried from the DynamoDB table
         var_name (str): variable name
         freq (str): frequency of the data
-
     Returns:
         DataArray: xarray DataArray containing the data
     """

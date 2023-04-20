@@ -4,7 +4,8 @@ Data processing package for verification purposes.
 
 The main objective of this package is the generation of datasets for verification purposes (metrics, reports, alerts, visualisations...), by merging model outputs (ML or NWP) and corresponding observations values.
 
-### Models output vs. Observations Variables
+
+## Models output vs. Observations Variables
 
 The models (ePD, DLITE, WRF, MLPP...) outputs to verify against an observation variable are defined in the configuration  ``` data/obs_var.yaml``` file.
 Each model variable is given with their unit and the corresponding source obs variable, unit and conversion factor/delta.
@@ -35,6 +36,10 @@ ePD:
         conv: [1,0] 
 ```
 
+## Utils
+
+
+
 ## Observations
 
 For now, 2 datasources are covered: DynamoDB and the 1 min API
@@ -61,7 +66,9 @@ obs_gust = ddb.extract_obs_data(obs_all,
 
 ### 1 Minute Obs API
 
-...
+```
+
+```
 
 
 ## Models Verification
