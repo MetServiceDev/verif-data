@@ -50,7 +50,7 @@ The folowing gives examples how to use the Obs retrieval functions idependently.
 
 ```python
 import datetime
-from verif.data.obs import ddb 
+from verif.obs import ddb 
 
 # Query the station for a time period
 obs_all = ddb.get_obs_all(obs_id = "NZCQX_nzaws",
@@ -61,13 +61,17 @@ obs_all = ddb.get_obs_all(obs_id = "NZCQX_nzaws",
 obs_gust = ddb.extract_obs_data(obs_all, 
                                 var_name="windGustMaximum@1h",
                                 freq="hourly")
-
 ```
 
 ### 1 Minute Obs API
 
-```
+```python
+import datetime
+from verif.obs import obsAPI
 
+api = obsAPI.RequestAPI(station_id=93106, apikey="1234567890")
+api.query_last(60)
+api.query_range(datetime.datetime(2023, 1, 1), datetime.datetime(2023, 1, 2))
 ```
 
 
