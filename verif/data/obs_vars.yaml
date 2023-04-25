@@ -1,0 +1,64 @@
+ePD:
+  TTTTT:
+    unit: degC
+    DDB_obs:
+      airTemperature:
+        unit: K
+        conv: [1,-273.15]
+    API_obs:
+      airtemp_01mnavg:
+        unit: degC
+        conv: [1,0]
+  fff10:
+    unit: kt
+    DDB_obs:
+      windSpeed@1h:
+        unit: m/s
+        conv: [1.944,0]
+    API_obs:
+      windspd_01hravg:
+        unit: kt
+        conv: [1,0]
+DLITE:
+  TTTTT:
+    unit: degC
+    DDB_obs:
+      airTemperature:
+        unit: K
+        conv: [1,-273.15]
+    API_obs:
+      airtemp_01mnavg:
+        unit: degC
+        conv: [1,0]
+  fff10:
+    unit: kt
+    DDB_obs:
+      windSpeed@1h:
+        unit: m/s
+        conv: [1.944,0]
+    API_obs:
+      windspd_01hravg:
+        unit: kt
+        conv: [1,0]
+WRF:
+  t2mc:
+    unit: degC
+    DDB_obs:
+      airTemperature:
+        unit: K
+        conv: [1,-273.15]
+    API_obs:
+      airtemp_01mnavg:
+        unit: degC
+        conv: [1,0]
+MLPP:
+  TTTTT:
+    unit: degC
+    DDB_obs:
+      airTemperature:
+        unit: K
+        conv: [1,-273.15]
+    API_obs:
+      airtemp_01mnavg:
+        unit: degC
+        conv: [1,0]

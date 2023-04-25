@@ -2,12 +2,15 @@
 Functions for verifying DeepThought ePD/DLITE outputs
 
 """
+import datetime
 import numpy as np
 from scipy.stats import norm
 import pandas as pd
 import xarray as xr
 import properscoring as ps
 from dt_output import get_dt_output
+
+from verif.obs.utils import get_obs_serie
 
 
 
@@ -40,21 +43,34 @@ def verify_dt_ouput(station, dt_start, dt_end, predictand, dt_kind):
     # obs_ds = get_obs(station, dt1, dt2, predictand) # need to query DDB + QC + interp... TODO
     # need to return a serie of obs, index datetime
     # For now, patch to read the 2022 temperature extract from DT (QCed)
-    obs_ds = pd.read_parquet('s3://metservice-research-us-west-2/research/experiments/benv/mlpp/data_parquet/obs_TTTTT_2022.parquet')
-    obs_ds = obs_ds[obs_ds.index==station]
-    obs_ds = obs_ds.assign(validtime = lambda x : pd.to_datetime(x['forecast_time'])).set_index('validtime')
+    # obs_ds = pd.read_parquet('s3://metservice-research-us-west-2/research/experiments/benv/mlpp/data_parquet/obs_TTTTT_2022.parquet')
+    # obs_ds = obs_ds[obs_ds.index==station]
+    # obs_ds = obs_ds.assign(validtime = lambda x : pd.to_datetime(x['forecast_time'])).set_index('validtime')
 
+    # obs from DDB
+    obs_ds = get_obs_serie(station,
+                            dt_kind,
+                            predictand,
+                            'DDB_obs',
+                            dt_start,
+                            dt_end + datetime.timedelta(days=16), # add 16 days to cover the prognosis period
+                            freq='hourly')
+    
     # observation mapping
-    mapping = dict(zip(pd.to_datetime(obs_ds.index), obs_ds[predictand]))
+    # mapping = dict(zip(pd.to_datetime(obs_ds.index), obs_ds[predictand]))
+    mapping = dict(zip(pd.to_datetime(obs_ds.time.values), obs_ds.values))
     map_func = np.vectorize(lambda x: mapping.get(x, np.nan))
 
     # apply the mapping function to the 'validtime' variable 
     obs_predictand = map_func(pd.to_datetime(dt_ds['validtime'].values)).astype(np.float32)
     # assign with the same dimensions
     dt_ds[f'obs_{predictand}'] = (('basetime', 'prognosis_period'), obs_predictand)
+    # add metadata
+    dt_ds[f'obs_{predictand}'].attrs = obs_ds.attrs
 
-
-    if dt_kind=='ePD':
+    # if dt_kind=='ePD':
+    # full prob distribution
+    if dt_ds.attrs['pdf_type']==3:
         # observation probabiltiy
         p_obs = xr.apply_ufunc(np.interp,
                         dt_ds[f'obs_{predictand}'],
@@ -88,7 +104,9 @@ def verify_dt_ouput(station, dt_start, dt_end, predictand, dt_kind):
                         vectorize=True)
         dt_ds['crps'] = crps.astype(np.float32)
 
-    elif dt_kind=='DLITE':
+    # elif dt_kind=='DLITE':
+    # normal distribution (mean + sd)
+    elif dt_ds.attrs['pdf_type']==8:
         # observation probabiltiy (for the normal dist)
         p_obs = xr.apply_ufunc(norm.pdf,
                         dt_ds[f'obs_{predictand}'],
