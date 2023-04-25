@@ -7,12 +7,12 @@ The main objective of this package is the generation of datasets for verificatio
 
 ## Models output vs. Observations Variables
 
-The models (ePD, DLITE, WRF, MLPP...) outputs to verify against an observation variable are defined in the configuration  ``` data/obs_var.yaml``` file.
+The models (ePD, DLITE, WRF, MLPP...) outputs to verify against an observation variable are defined in the configuration  ```data/obs_var.yaml``` file.
 Each model variable is given with their unit and the corresponding source obs variable, unit and conversion factor/delta.
 
 Example for the ePD model:
 
-``` 
+```yaml
 ePD:
   TTTTT:
     unit: degC
@@ -48,7 +48,7 @@ The folowing gives examples how to use the Obs retrieval functions idependently.
 
 ### Dynamo DB
 
-```
+```python
 import datetime
 from verif.data.obs import ddb 
 
@@ -81,7 +81,7 @@ DeepThought verification is currently done against DDB obs source. The model out
 
 The `verify_dt_output` returns an Xarray dataset with PDF and CDF values for the observations and probabilistic verification metrics (CRPS, Negative log Likelihood).
 
-```
+```python
 import datetime
 from verif.models import dt_verif
 
