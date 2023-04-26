@@ -36,14 +36,14 @@ class RequestAPI:
         self.headers = {"apikey": apikey}
 
     def query_last(self, n_mins: int):
-        url = self.base_url + f"/last/{n_mins}/minutes?format=cf-json"
+        url = self.base_url + f"/last/{n_mins}/minutes?format=json"
         response = self.session.get(url, headers=self.headers)
         return json.loads(response.content)
 
     def query_range(self, start: datetime.datetime, end: datetime.datetime):
         url = (
             self.base_url
-            + f"/range/{start.strftime('%Y-%m-%dT%H:%M:%SZ')}/{end.strftime('%Y-%m-%dT%H:%M:%SZ')}?format=cf-json"
+            + f"/range/{start.strftime('%Y-%m-%dT%H:%M:%SZ')}/{end.strftime('%Y-%m-%dT%H:%M:%SZ')}?format=json"
         )
         response = self.session.get(url, headers=self.headers)
         return json.loads(response.content)
