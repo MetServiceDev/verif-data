@@ -83,17 +83,21 @@ The folowing models are covered and the following functions create verification 
 
 DeepThought verification is currently done against DDB obs source. The model outputs are pulled from S3 thanks to the `dt-output` package.
 
-The `verify_dt_output` returns an Xarray dataset with PDF and CDF values for the observations and probabilistic verification metrics (CRPS, Negative log Likelihood).
+The `VerifDT.verify_vars()` returns an list of Xarray dataset with PDF and CDF values for the observations and probabilistic verification metrics (CRPS, Negative log Likelihood) of the considered model variables to verify.
 
 ```python
 import datetime
-from verif.models import dt_verif
+from verif.models.dt_verif import VerifDT
 
-dlite_verif = dt_verif.verify_dt_ouput(wmo_code = '93439',
-                                       dt_start = datetime.datetime(2023, 3, 1),
-                                       dt_end = datetime.datetime(2023, 3, 31),
-                                       predictand = 'TTTTT',
-                                       dt_kind = 'DLITE')
+verif_dlite = dt_verif.VerifDT(station_id='93439',
+                                      dt_start=datetime.datetime(2023, 3, 1),
+                                      dt_end=datetime.datetime(2023, 3, 2),
+                                      obs_source='DDB_obs',
+                                      model='DLITE',
+                                      model_vars=['TTTTT', 'fff10'])
+
+# Run the verification
+verif_dlite.verify_vars()
 ```
 
 ### WRF
