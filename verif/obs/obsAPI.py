@@ -48,14 +48,20 @@ class RequestAPI:
         return self.obs_all
 
     def query_range(self, start: datetime.datetime, end: datetime.datetime):
-        """ Query a date range - Even larger than 1 day """
+        """ Query a date range
+            Multiple queries for request > 1day
+        """
 
         if end-start <= datetime.timedelta(days=1):
             url = (self.base_url +
                    f"/range/{start.strftime('%Y-%m-%dT%H:%M:%SZ')}/{end.strftime('%Y-%m-%dT%H:%M:%SZ')}?format=json"
                   )
             response = self.session.get(url, headers=self.headers)
-            self.obs_all = json.loads(response.content)['results']
+            content = json.loads(response.content)
+            try:
+                self.obs_all = content['results']
+            except KeyError:
+                pass
         else:
             current = start
             while end-current > datetime.timedelta(days=1):
@@ -64,14 +70,22 @@ class RequestAPI:
                        f"/range/{current.strftime('%Y-%m-%dT%H:%M:%SZ')}/{current_end.strftime('%Y-%m-%dT%H:%M:%SZ')}?format=json"
                       )
                 response = self.session.get(url, headers=self.headers)
-                self.obs_all.extend(json.loads(response.content)['results'])
+                content = json.loads(response.content)
+                try:
+                    self.obs_all.extend(content['results'])
+                except KeyError:
+                    pass
                 current += datetime.timedelta(days=1)
 
             url = (self.base_url +
                    f"/range/{current.strftime('%Y-%m-%dT%H:%M:%SZ')}/{end.strftime('%Y-%m-%dT%H:%M:%SZ')}?format=json"
                   )
             response = self.session.get(url, headers=self.headers)
-            self.obs_all.extend(json.loads(response.content)['results'])
+            content = json.loads(response.content)
+            try:
+                self.obs_all.extend(content['results'])
+            except KeyError:
+                pass
 
         return self.obs_all
     
@@ -83,6 +97,13 @@ class RequestAPI:
             dt = datetime.datetime.fromisoformat(obs["obs_timestamp"][:-1])
             if freq == "hourly":
                 if dt.minute == 0:
+                    valid_time.append(dt)
+                    try:
+                        data.append(float(obs[var_name]))
+                    except:
+                        data.append(np.nan)
+            elif freq == "10min":
+                if dt.minute % 10 == 0:
                     valid_time.append(dt)
                     try:
                         data.append(float(obs[var_name]))

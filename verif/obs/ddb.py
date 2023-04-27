@@ -75,6 +75,13 @@ def extract_obs_data(obs_all: list, var_name: str, freq: str):
                     data.append(float(obs[var_name]))
                 except:
                     data.append(np.nan)
+        elif freq == "10min":
+            if dt.minute%10 == 0:
+                valid_time.append(dt)
+                try:
+                    data.append(float(obs[var_name]))
+                except:
+                    data.append(np.nan)
         else:
             valid_time.append(dt)
             try:
