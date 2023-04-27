@@ -88,6 +88,6 @@ def extract_obs_data(obs_all: list, var_name: str, freq: str):
             "time": valid_time,
         },
         dims=["time"],
-    )
+    ).drop_duplicates(dim='time').sortby('time')
 
     return da
