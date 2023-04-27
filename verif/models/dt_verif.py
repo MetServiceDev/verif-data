@@ -162,7 +162,8 @@ class VerifDT(VerifModelStation):
                  model,
                  model_vars,
                  fcast_window=16,
-                 freq='hourly'
+                 freq='hourly',
+                 api_key=None
                  ):
         super().__init__(station_id,
                          dt_start,
@@ -171,7 +172,8 @@ class VerifDT(VerifModelStation):
                          model,
                          model_vars,
                          fcast_window,
-                         freq)
+                         freq,
+                         api_key)
         # obs query
         self.obs_ds = super().query_obs()
 
