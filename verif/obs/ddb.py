@@ -60,7 +60,7 @@ def extract_obs_data(obs_all: list, var_name: str, freq: str):
     Args:
         obs_all (list): all observations queried from the DynamoDB table
         var_name (str): variable name
-        freq (str): frequency of the data
+        freq (str): frequency of the data ('hourly', '10min', None for all)
     Returns:
         DataArray: xarray DataArray containing the data
     """

@@ -90,7 +90,11 @@ class RequestAPI:
         return self.obs_all
     
     def extract_obs_data(self, var_name: str, freq: str=None):
-        """ Extract obs serie for given var and frequency """
+        """ Extract obs serie for given var and frequency 
+            Args:
+                var_name (str): variable name
+                freq (str): frequency of the data ('hourly', '10min', None for all)
+        """
         valid_time = []
         data = []
         for obs in self.obs_all:

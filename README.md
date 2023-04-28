@@ -57,10 +57,15 @@ obs_all = ddb.get_obs_all(obs_id = "NZCQX_nzaws",
                           dt_start = datetime.datetime(2023, 3, 1),
                           dt_end = datetime.datetime(2023, 3, 30),
                           table_recent=True)
-# Extract a specific variable
-obs_gust = ddb.extract_obs_data(obs_all, 
+# Extract a variable at frequency
+obs_gust_all = ddb.extract_obs_data(obs_all, 
+                                var_name="windGustMaximum@1h")
+obs_gust_hour = ddb.extract_obs_data(obs_all, 
                                 var_name="windGustMaximum@1h",
                                 freq="hourly")
+obs_gust_10min = ddb.extract_obs_data(obs_all, 
+                                var_name="windGustMaximum@1h",
+                                freq="10min")
 ```
 
 ### 1 Minute Obs API
@@ -69,9 +74,19 @@ obs_gust = ddb.extract_obs_data(obs_all,
 import datetime
 from verif.obs import obsAPI
 
+# Instantiate the class for the station with the API key
 api = obsAPI.RequestAPI(station_id=93106, apikey="1234567890")
+# Query last 60 minutes (max 360) - return a dict
 api.query_last(60)
-api.query_range(datetime.datetime(2023, 1, 1), datetime.datetime(2023, 1, 2))
+# Query a range - More than one day possible
+api.query_range(datetime.datetime(2023, 3, 1), datetime.datetime(2023, 3, 4))
+# Extract a variable at frequency
+obs_temp_all = api.extract_obs_data('airtemp_01mnavg')
+obs_temp_hour = api.extract_obs_data('airtemp_01mnavg',
+                                     freq='hourly')
+obs_temp_10min= api.extract_obs_data('airtemp_01mnavg',
+                                     freq='10min')
+
 ```
 
 
@@ -79,9 +94,43 @@ api.query_range(datetime.datetime(2023, 1, 1), datetime.datetime(2023, 1, 2))
 
 The folowing models are covered and the following functions create verification dataset against the chosen Obs source ('DDB_obs' or 'API_obs').
 
+### Generic Class
+
+The parent generic class ```VerifModelStation``` allows to retrieve corresponding observations variables for a given model/outputs to verify. This class can be derived for model verification specifics.
+
+```python
+from verif.models import verif
+
+# from DDB
+verif_model = verif.VerifModelStation(station_id='93106',
+                                      dt_start=datetime.datetime(2023, 3, 1),
+                                      dt_end=datetime.datetime(2023, 3, 30),
+                                      obs_source='DDB_obs',
+                                      model='ePD',
+                                      model_vars=['TTTTT','fff10'],
+                                      fcast_window=16,
+                                      freq='hourly')
+
+# or from API
+verif_model = verif.VerifModelStation(station_id='93106',
+                                      dt_start=datetime.datetime(2023, 3, 1),
+                                      dt_end=datetime.datetime(2023, 3, 30),
+                                      obs_source='API_obs',
+                                      model='ePD',
+                                      model_vars=['TTTTT','fff10'],
+                                      fcast_window=16,
+                                      freq='hourly',
+                                      api_key="1234567890")
+
+# Retrive the obs
+verif_model.query_obs()
+
+```
+
+
 ### DeepThought
 
-DeepThought verification is currently done against DDB obs source. The model outputs are pulled from S3 thanks to the `dt-output` package.
+DeepThought verification can be done against DDB or API obs. The model outputs are pulled from S3 thanks to the `dt-output` package.
 
 The `VerifDT.verify_vars()` returns an list of Xarray dataset with PDF and CDF values for the observations and probabilistic verification metrics (CRPS, Negative log Likelihood) of the considered model variables to verify.
 
@@ -89,15 +138,15 @@ The `VerifDT.verify_vars()` returns an list of Xarray dataset with PDF and CDF v
 import datetime
 from verif.models.dt_verif import VerifDT
 
-verif_dlite = dt_verif.VerifDT(station_id='93439',
-                                      dt_start=datetime.datetime(2023, 3, 1),
-                                      dt_end=datetime.datetime(2023, 3, 2),
-                                      obs_source='DDB_obs',
-                                      model='DLITE',
-                                      model_vars=['TTTTT', 'fff10'])
+verif_dlite = VerifDT(station_id='93439',
+                      dt_start=datetime.datetime(2023, 3, 1),
+                      dt_end=datetime.datetime(2023, 3, 2),
+                      obs_source='DDB_obs',
+                      model='DLITE',
+                      model_vars=['TTTTT', 'fff10'])
 
-# Run the verification
-verif_dlite.verify_vars()
+# Run the verification (list of xarrays for each requested model vars)
+verifs = verif_dlite.verify_vars()
 ```
 
 ### WRF
