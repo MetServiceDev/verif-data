@@ -26,6 +26,12 @@ def load_iceobs_stations():
         obs_vars = json.load(f)
     return obs_vars
 
+def get_obs_id(wmo_code):
+    """ Get the DDB obs_id from the wmo code
+    """
+    obs_id = load_iceobs_stations()[wmo_code]['name']
+    return obs_id
+
 
 def get_obs_serie(wmo_code: str,
                   model:str,

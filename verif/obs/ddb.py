@@ -60,7 +60,7 @@ def extract_obs_data(obs_all: list, var_name: str, freq: str):
     Args:
         obs_all (list): all observations queried from the DynamoDB table
         var_name (str): variable name
-        freq (str): frequency of the data
+        freq (str): frequency of the data ('hourly', '10min', None for all)
     Returns:
         DataArray: xarray DataArray containing the data
     """
@@ -70,6 +70,13 @@ def extract_obs_data(obs_all: list, var_name: str, freq: str):
         dt = datetime.datetime.strptime(obs["valid_time"], "%Y%m%d%H%M%S")
         if freq == "hourly":
             if dt.minute == 0:
+                valid_time.append(dt)
+                try:
+                    data.append(float(obs[var_name]))
+                except:
+                    data.append(np.nan)
+        elif freq == "10min":
+            if dt.minute%10 == 0:
                 valid_time.append(dt)
                 try:
                     data.append(float(obs[var_name]))
@@ -88,6 +95,6 @@ def extract_obs_data(obs_all: list, var_name: str, freq: str):
             "time": valid_time,
         },
         dims=["time"],
-    )
+    ).drop_duplicates(dim='time').sortby('time')
 
     return da
