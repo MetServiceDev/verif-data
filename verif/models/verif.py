@@ -18,6 +18,7 @@ class VerifModelStation():
         model (str): model to verify (need to be referenced in the Yaml)
         model_vars (list): list of model variables we want to verify
         freq (str): frequency requested (None: all points, 'hourly', '10min' )  
+        api_key (str): 1 min obs API key
     """
 
     def __init__(self,

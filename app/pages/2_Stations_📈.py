@@ -12,11 +12,19 @@ data_path = st.session_state["data_path"]
 year = st.session_state["year"]
 predictand = st.session_state["predictand"]
 ref_model = st.session_state["ref_model"]
+max_lead = st.session_state["max_lead"]
 
 
-# Ref Model station list
-station_list = [station.split('/')[-1:][0][:5] for station 
+# Models station list
+
+epd_station_list = [station.split('/')[-1:][0][:5] for station 
+                in glob.glob(f'{data_path}/{year}/ePD/{predictand}/*')] #.sort()
+
+ref_model_station_list = [station.split('/')[-1:][0][:5] for station 
                 in glob.glob(f'{data_path}/{year}/{ref_model}/{predictand}/*')] #.sort()
+
+station_list = sorted(list(set(epd_station_list).intersection(ref_model_station_list)))
+
 
 station_attributes = st.session_state["stations_attributes"][st.session_state["stations_attributes"]['stationId'].isin(station_list)]
 
@@ -43,7 +51,13 @@ st.header('Probabilistic Verification - Station Level Metrics')
 
 
 # Selection widgets ##############################################
-station_select = st.sidebar.selectbox("Select a station", station_attributes['stationId'])
+def station_name_from_id(id):
+    name = station_attributes[station_attributes['stationId']==id]['name'].values[0]
+    return f'{id} - {name}'
+
+station_select = st.sidebar.selectbox(label="Select a station",
+                                      options=station_attributes['stationId'],
+                                      format_func = station_name_from_id )
 
 st.write('Station :', station_attributes[station_attributes['stationId']==station_select])
 
@@ -61,7 +75,7 @@ drn_station_basetime = drn_station.sel(basetime=basetime_select).to_dataframe()
 # drn_station_lead = station_lead(drn_station)
 
 # load station for ePD (subset)
-ePD_station = load_station('ePD', station_select, basetimes_hours=[0,12], prog_periods=85)
+ePD_station = load_station('ePD', station_select, basetimes_hours=[0,12], prog_periods=max_lead) #85)
 # ePD_station = ePD_station.isel(prognosis_period=slice(0,85))
 ePD_station_basetime =  ePD_station.sel(basetime=basetime_select).to_dataframe()
 # ePD_station_lead = station_lead(ePD_station)
