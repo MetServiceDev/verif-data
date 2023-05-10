@@ -16,7 +16,7 @@ ref_model = st.session_state["ref_model"]
 
 # Ref Model station list
 station_list = [station.split('/')[-1:][0][:5] for station 
-                in glob.glob(f'{data_path}/{year}/{ref_model}/{predictand}/*')] #.sort()
+                in glob.glob(f'{data_path}/{year}/ePD/{predictand}/*')] #.sort()
 
 station_attributes = st.session_state["stations_attributes"][st.session_state["stations_attributes"]['stationId'].isin(station_list)]
 

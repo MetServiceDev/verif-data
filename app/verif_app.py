@@ -27,8 +27,10 @@ st.session_state["data_path"] = '/home/benv/data/verification'
 
 st.session_state["year"] = st.selectbox("Select an analysis year", ['2022'])
 st.session_state["predictand"] = st.selectbox("Select a forecast variable", ['TTTTT'])
-st.session_state["ref_model"] = st.selectbox("Select the model to compare to ePD", ['DRN2_ARWECMWFcld_single_nz4km'])
-st.session_state["max_lead"] = st.selectbox("Select the maximum lead time (h)", [85])
+st.session_state["ref_model"] = st.selectbox("Select the model to compare to ePD", ['DRN_ECMWF',
+                                                                                    'DRN2_ARWECMWFcld_single_nz4km'
+                                                                                    ])
+st.session_state["max_lead"] = st.selectbox("Select the maximum lead time (h)", [240, 85])
 
 
 # Stations attributes
