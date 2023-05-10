@@ -36,7 +36,8 @@ st.session_state["max_lead"] = st.selectbox("Select the maximum lead time (h)", 
 # Stations attributes
 @st.cache_data
 def load_station_attributes():
-    st_att = pd.read_parquet(st.session_state["data_path"] + '/stations_attributes.parquet')
+    st_att = (pd.read_parquet(st.session_state["data_path"] + '/stations_attributes.parquet')
+                .sort_values(by='stationId'))
     return st_att
 
 st.session_state["stations_attributes"] = load_station_attributes()
