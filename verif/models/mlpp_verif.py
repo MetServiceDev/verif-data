@@ -1,4 +1,3 @@
-
 """
 MLPP verification class
 
@@ -9,9 +8,7 @@ from scipy.stats import norm
 import pandas as pd
 import xarray as xr
 import properscoring as ps
-from dt_output import get_dt_output
 
-from verif.obs.utils import get_obs_serie
 from verif.models.verif import VerifModelStation
 
 
@@ -39,7 +36,7 @@ class VerifMLPP(VerifModelStation):
                  model,
                  model_vars,
                  preds_ds,
-                 fcast_window=16,
+                 fcast_window=0,
                  freq='hourly',
                  api_key=None
                  ):
@@ -57,9 +54,11 @@ class VerifMLPP(VerifModelStation):
                          fcast_window,
                          freq,
                          api_key)
-        # obs query
+        
+        # obs query for all related model variables
         self.obs_ds = super().query_obs()
-        self.verif_ds_list = []
+
+        self.verif_ds = None
 
     def verify_vars(self):
 
@@ -67,17 +66,15 @@ class VerifMLPP(VerifModelStation):
         self.verif_ds = (self.preds_ds.set_index('forecast_time')
                         .join(self.obs_ds.to_dataframe().tz_localize(tz='UTC')))
         
-        # verification metrics for each var to verify
+        # verification metrics for each var to verify (Gaussian pdf only for now)
         for var in self.model_vars:
-            verif_var = self.verif_ds.assign(error = lambda x: x[f'p1_{var}'] - x[f'{var}_obs'],
-                                abs_error = lambda x: np.abs(x.error),
-                                error2 = lambda x: x.error**2,
-                                p_obs = lambda x: norm.pdf(x[f'{var}_obs'], x[f'p1_{var}'], x[f'p2_{var}']),
-                                cp_obs = lambda x: norm.pdf(x.TTTTT_obs, x[f'p1_{var}'], x[f'p2_{var}']),
-                                negloglik = lambda x: -np.log(x.p_obs),
-                                crps = lambda x: ps.crps_gaussian(x[f'{var}_obs'], x[f'p1_{var}'], x[f'p2_{var}']),
-                                )
 
-            self.verif_ds_list.append(verif_var)
+            self.verif_ds[f'{var}_error'] = self.verif_ds[f'p1_{var}'] - self.verif_ds[f'{var}_obs']
+            self.verif_ds[f'{var}_abs_error'] = np.abs(self.verif_ds[f'{var}_error'])
+            self.verif_ds[f'{var}_error2'] = self.verif_ds[f'{var}_error']**2
+            self.verif_ds[f'{var}_p_obs'] = norm.pdf(self.verif_ds[f'{var}_obs'], self.verif_ds[f'p1_{var}'], self.verif_ds[f'p2_{var}'])
+            self.verif_ds[f'{var}_cp_obs'] = norm.pdf(self.verif_ds[f'{var}_obs'], self.verif_ds[f'p1_{var}'], self.verif_ds[f'p2_{var}'])
+            self.verif_ds[f'{var}_negloglik'] = -np.log(self.verif_ds[f'{var}_p_obs'])
+            self.verif_ds[f'{var}_crps'] = ps.crps_gaussian(self.verif_ds[f'{var}_obs'], self.verif_ds[f'p1_{var}'], self.verif_ds[f'p2_{var}'])
                         
-        return self.verif_ds_list
+        return self.verif_ds
