@@ -73,7 +73,7 @@ class VerifMLPP(VerifModelStation):
             self.verif_ds[f'{var}_abs_error'] = np.abs(self.verif_ds[f'{var}_error'])
             self.verif_ds[f'{var}_error2'] = self.verif_ds[f'{var}_error']**2
             self.verif_ds[f'{var}_p_obs'] = norm.pdf(self.verif_ds[f'{var}_obs'], self.verif_ds[f'p1_{var}'], self.verif_ds[f'p2_{var}'])
-            self.verif_ds[f'{var}_cp_obs'] = norm.pdf(self.verif_ds[f'{var}_obs'], self.verif_ds[f'p1_{var}'], self.verif_ds[f'p2_{var}'])
+            self.verif_ds[f'{var}_cp_obs'] = norm.cdf(self.verif_ds[f'{var}_obs'], self.verif_ds[f'p1_{var}'], self.verif_ds[f'p2_{var}'])
             self.verif_ds[f'{var}_negloglik'] = -np.log(self.verif_ds[f'{var}_p_obs'])
             self.verif_ds[f'{var}_crps'] = ps.crps_gaussian(self.verif_ds[f'{var}_obs'], self.verif_ds[f'p1_{var}'], self.verif_ds[f'p2_{var}'])
                         
