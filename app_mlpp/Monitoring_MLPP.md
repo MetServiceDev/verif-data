@@ -1,17 +1,27 @@
-# Verification App
+# MLPP Monitoring App
 
-## Run
+Monitoring App for MLPP models, against NWP (currently only WRF NZ4k) and Observations.
 
-From the app folder : ```streamlit run verif_app_mlpp.py --server.port 8502```
+This web app sources the data from AWS S3, then valid credentials are required on the machine running the app.
 
-Then on a browser from the corporate network : http://10.200.2.116:8501/
+```git clone git@github.com:MetServiceDev/verif-data.git```
 
-## Docker
+## Install and Run 
 
-Build the image:
+In a fresh python env, from the app_mlpp folder:
 
-```docker build -t monitoring_mlpp .``` from the app_mlpp folder
+```pip install -r requirements.txt```
+
+```streamlit run mlpp_monitoring.py --server.port 8502```
+
+Then in a browser : http://localhost:8502/
+
+## Using Docker
+
+Build the image from the app_mlpp folder:
+
+```docker build -t monitoring_mlpp .``` 
 
 To run the app locally
 
-```docker run -p 80:80 -v /home/benv/data/:/home/benv/data/ monitoring_mlpp ```
+```docker run -p 81:81 -v ~/.aws/:/root/.aws/ monitoring_mlpp ```

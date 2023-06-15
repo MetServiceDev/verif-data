@@ -14,4 +14,4 @@ EXPOSE 8502
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "mlpp_monitoring.py", "--server.port=80", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "mlpp_monitoring.py", "--server.port=81", "--server.address=0.0.0.0"]
