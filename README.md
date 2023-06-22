@@ -149,13 +149,39 @@ verif_dlite = VerifDT(station_id='93439',
 verifs = verif_dlite.verify_vars()
 ```
 
+
+### MLPP
+
+Probabilistic verification of MLPP model outputs against DDB or API obs.
+The `VerifDT.verify_vars()` returns a pandas dataframe with PDF and CDF values for the observations and probabilistic verification metrics (CRPS, Negative log Likelihood) of the considered model variables to verify.
+
+```python
+import pandas as pd
+from verif.models.mlpp_verif import VerifMLPP
+
+# Load predictions for a given run / station (must include forecast_time variable)
+run_date = '2023060800'
+station = '93439'
+preds_path = 's3://metservice-research-us-west-2/research/experiments/benv/mlpp/predictions/nz4kmN-ECMWF-SIGMA'
+pred_file = f'{preds_path}/{run_date}/{station}.parquet'
+pred_station = pd.read_parquet(pred_file)
+
+# Verif instance
+verif_mlpp = VerifMLPP(station_id='93439',
+                      obs_source='DDB_obs',
+                      model='MLPP',
+                      model_vars=['TTTTT'],
+                      preds_ds=pred_station,
+                      freq='hourly')
+# Run the verification (list of xarrays for each requested model vars)
+verifs = verif_mlpp.verify_vars()
+```
+
 ### WRF
 
 TBD
 
-### MLPP
 
-TBD
 
 #### Windcast
 
