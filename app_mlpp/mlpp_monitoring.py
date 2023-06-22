@@ -41,7 +41,7 @@ station_attributes = load_station_attributes()
 
 # Model and Runs Selection
 model = st.sidebar.selectbox(label='Model',
-                            options=['nz4kmN-ECMWF-SIGMA'], #[run.split('/')[-1] for run in fs_s3.glob(f'{VERIF_DATA_PATH}/')],
+                            options=['nz4kmN-ECMWF-SIGMA', 'nz4kmN-ECMWF-SIGMA_API', 'nz4kmN-ECMWF-SIGMA_DDB'], #[run.split('/')[-1] for run in fs_s3.glob(f'{VERIF_DATA_PATH}/')],
                             )
 
 fcast_var = st.sidebar.selectbox(label='Forecast Variable',
